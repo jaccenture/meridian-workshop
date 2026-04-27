@@ -29,6 +29,14 @@
             {{ t('nav.restocking') }}
           </router-link>
         </nav>
+        <button class="theme-toggle" @click="toggleDark" :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+          <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.166 17.834a.75.75 0 00-1.06 1.06l1.59 1.591a.75.75 0 001.061-1.06l-1.59-1.591zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.166 7.166a.75.75 0 001.06-1.06L5.635 4.515a.75.75 0 00-1.06 1.06l1.59 1.591z" />
+          </svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd" />
+          </svg>
+        </button>
         <LanguageSwitcher />
         <ProfileMenu
           @show-profile-details="showProfileDetails = true"
@@ -83,6 +91,20 @@ export default {
     const showProfileDetails = ref(false)
     const showTasks = ref(false)
     const apiTasks = ref([])
+
+    const isDark = ref(localStorage.getItem('theme') === 'dark')
+
+    const applyTheme = (dark) => {
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
+    }
+
+    const toggleDark = () => {
+      isDark.value = !isDark.value
+      localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+      applyTheme(isDark.value)
+    }
+
+    applyTheme(isDark.value)
 
     // Merge mock tasks from currentUser with API tasks
     const tasks = computed(() => {
@@ -153,6 +175,8 @@ export default {
 
     return {
       t,
+      isDark,
+      toggleDark,
       showProfileDetails,
       showTasks,
       tasks,
@@ -485,5 +509,163 @@ tbody tr:hover {
   border-radius: 8px;
   margin: 1rem 0;
   font-size: 0.938rem;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  margin-right: 0.75rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ─── Dark mode overrides ─────────────────────────────────────── */
+
+html[data-theme="dark"] body {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .top-nav {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+html[data-theme="dark"] .logo h1 { color: #f1f5f9; }
+
+html[data-theme="dark"] .subtitle {
+  color: #94a3b8;
+  border-left-color: #475569;
+}
+
+html[data-theme="dark"] .nav-tabs a { color: #94a3b8; }
+
+html[data-theme="dark"] .nav-tabs a:hover {
+  color: #f1f5f9;
+  background: #334155;
+}
+
+html[data-theme="dark"] .nav-tabs a.active {
+  color: #60a5fa;
+  background: #1e3a5f;
+}
+
+html[data-theme="dark"] .nav-tabs a.active::after { background: #60a5fa; }
+
+html[data-theme="dark"] .theme-toggle {
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .theme-toggle:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+html[data-theme="dark"] .page-header h2 { color: #f1f5f9; }
+html[data-theme="dark"] .page-header p  { color: #94a3b8; }
+
+html[data-theme="dark"] .stat-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .stat-card:hover {
+  border-color: #475569;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="dark"] .stat-label  { color: #94a3b8; }
+html[data-theme="dark"] .stat-value  { color: #f1f5f9; }
+
+html[data-theme="dark"] .card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .card-header { border-bottom-color: #334155; }
+html[data-theme="dark"] .card-title  { color: #f1f5f9; }
+
+html[data-theme="dark"] thead {
+  background: #0f172a;
+  border-top-color: #334155;
+  border-bottom-color: #334155;
+}
+
+html[data-theme="dark"] th { color: #64748b; }
+
+html[data-theme="dark"] td {
+  border-top-color: #334155;
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] tbody tr:hover { background: #0f172a; }
+
+html[data-theme="dark"] .loading { color: #64748b; }
+
+html[data-theme="dark"] .error {
+  background: #450a0a;
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+html[data-theme="dark"] .badge.success,
+html[data-theme="dark"] .badge.increasing  { background: #064e3b; color: #6ee7b7; }
+
+html[data-theme="dark"] .badge.warning     { background: #78350f; color: #fcd34d; }
+
+html[data-theme="dark"] .badge.danger,
+html[data-theme="dark"] .badge.decreasing,
+html[data-theme="dark"] .badge.high        { background: #7f1d1d; color: #fca5a5; }
+
+html[data-theme="dark"] .badge.info,
+html[data-theme="dark"] .badge.low         { background: #1e3a5f; color: #93c5fd; }
+
+html[data-theme="dark"] .badge.stable      { background: #312e81; color: #a5b4fc; }
+html[data-theme="dark"] .badge.medium      { background: #78350f; color: #fcd34d; }
+
+/* Filter bar */
+html[data-theme="dark"] .filters-bar {
+  background: #0f172a;
+  border-bottom-color: #334155;
+}
+
+html[data-theme="dark"] .filter-group label { color: #64748b; }
+
+html[data-theme="dark"] .filter-select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .filter-select:hover { border-color: #64748b; }
+
+html[data-theme="dark"] .reset-filters-btn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #64748b;
+}
+
+html[data-theme="dark"] .reset-filters-btn:hover:not(:disabled) {
+  background: #334155;
+  color: #e2e8f0;
 }
 </style>
