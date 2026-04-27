@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Components — Architecture Overview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 48px 32px; }
+
+  /* Header */
+  .header { margin-bottom: 48px; padding-bottom: 24px; border-bottom: 2px solid #e2e8f0; }
+  .header-meta { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .header h1 { font-size: 28px; font-weight: 700; color: #0f172a; }
+  .header p { margin-top: 8px; color: #64748b; font-size: 15px; }
+
+  /* Sections */
+  section { margin-bottom: 48px; }
+  h2 { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+  h3 { font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Stack summary */
+  .stack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stack-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+  .stack-card .layer { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .stack-card .tech { font-size: 15px; font-weight: 600; color: #0f172a; }
+  .stack-card .detail { font-size: 12px; color: #64748b; margin-top: 4px; }
+
+  /* Data flow diagram */
+  .flow { display: flex; align-items: stretch; gap: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+  .flow-step { flex: 1; padding: 20px 16px; border-right: 1px solid #e2e8f0; }
+  .flow-step:last-child { border-right: none; }
+  .flow-step .step-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .flow-step .step-name { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 6px; }
+  .flow-step .step-detail { font-size: 12px; color: #64748b; line-height: 1.5; }
+  .flow-arrow { display: flex; align-items: center; padding: 0 4px; color: #cbd5e1; font-size: 18px; flex-shrink: 0; }
+
+  /* Two-column layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* Component boxes */
+  .box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .box-title { font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
+  .box-sub { font-size: 12px; color: #64748b; }
+
+  /* API table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; }
+  th { text-align: left; padding: 10px 14px; background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e2e8f0; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .method { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #dbeafe; color: #1d4ed8; letter-spacing: 0.05em; }
+  .endpoint { font-family: 'Courier New', monospace; color: #334155; }
+  .params { color: #94a3b8; font-size: 12px; }
+  .status-ok { color: #16a34a; font-size: 11px; font-weight: 600; }
+  .status-missing { color: #dc2626; font-size: 11px; font-weight: 600; }
+
+  /* Tags */
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; margin-right: 4px; }
+  .tag-blue { background: #dbeafe; color: #1d4ed8; }
+  .tag-red { background: #fee2e2; color: #dc2626; }
+  .tag-amber { background: #fef3c7; color: #92400e; }
+  .tag-green { background: #dcfce7; color: #166534; }
+  .tag-purple { background: #f3e8ff; color: #7e22ce; }
+
+  /* Debt list */
+  .debt-list { list-style: none; }
+  .debt-list li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
+  .debt-list li:last-child { border-bottom: none; }
+  .debt-list .debt-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .debt-icon.high { background: #fee2e2; color: #dc2626; }
+  .debt-icon.med { background: #fef3c7; color: #92400e; }
+  .debt-body .debt-title { font-size: 13px; font-weight: 600; color: #0f172a; }
+  .debt-body .debt-desc { font-size: 12px; color: #64748b; margin-top: 2px; line-height: 1.5; }
+
+  /* File tree */
+  .tree { font-family: 'Courier New', monospace; font-size: 12px; background: #0f172a; color: #94a3b8; padding: 20px 24px; border-radius: 10px; line-height: 1.9; }
+  .tree .dir { color: #60a5fa; }
+  .tree .file { color: #e2e8f0; }
+  .tree .comment { color: #475569; }
+
+  /* Footer */
+  .footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-meta">Architecture Overview · RFP #MC-2026-0417 · April 2026</div>
+    <h1>Meridian Components — Inventory Dashboard</h1>
+    <p>Current-state architecture review. Produced during engagement onboarding as a deliverable for Meridian IT. Based on direct codebase inspection of the system delivered by the previous vendor (Nov 2024).</p>
+  </div>
+
+  <!-- Stack -->
+  <section>
+    <h2>Technology Stack</h2>
+    <div class="stack-grid">
+      <div class="stack-card">
+        <div class="layer">Frontend</div>
+        <div class="tech">Vue 3</div>
+        <div class="detail">Composition API · Vite · Port 3000</div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Backend</div>
+        <div class="tech">FastAPI</div>
+        <div class="detail">Python · Pydantic · Port 8001</div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Data</div>
+        <div class="tech">JSON Files</div>
+        <div class="detail">7 files · Loaded in-memory · No database</div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">i18n</div>
+        <div class="tech">Custom</div>
+        <div class="detail">English + Japanese · localStorage persistence</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data Flow -->
+  <section>
+    <h2>Data Flow</h2>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-label">1 · User action</div>
+        <div class="step-name">FilterBar.vue</div>
+        <div class="step-detail">User selects warehouse, category, period, or status. Updates shared singleton state.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-label">2 · State</div>
+        <div class="step-name">useFilters.js</div>
+        <div class="step-detail">Singleton composable. Holds refs for all 4 filter values. <code>getCurrentFilters()</code> returns param map.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-label">3 · HTTP</div>
+        <div class="step-name">api.js</div>
+        <div class="step-detail">18 Axios methods. Builds URLSearchParams from filter map. Calls backend at localhost:8001.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-label">4 · Backend</div>
+        <div class="step-name">FastAPI</div>
+        <div class="step-detail">Receives query params. Applies <code>apply_filters()</code> to in-memory data. Returns Pydantic model.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-label">5 · Data</div>
+        <div class="step-name">JSON → Memory</div>
+        <div class="step-detail">7 JSON files loaded at startup into Python lists. No DB queries. All filtering is in-memory.</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:#94a3b8;">Views watch filter state with <code>watch()</code> and re-call the API when filters change. Derived data lives in <code>computed()</code> properties — no redundant fetches.</p>
+  </section>
+
+  <!-- Views & Components -->
+  <section>
+    <h2>Frontend Structure</h2>
+    <div class="two-col">
+      <div>
+        <h3>Views (7)</h3>
+        <div class="box"><div class="box-title">Dashboard.vue</div><div class="box-sub">KPI summary, order health donut, inventory by category, shortages</div></div>
+        <div class="box"><div class="box-title">Inventory.vue</div><div class="box-sub">Stock levels table, client-side search, detail modal, filter integration</div></div>
+        <div class="box"><div class="box-title">Orders.vue</div><div class="box-sub">Order list with status/warehouse/category/month filters</div></div>
+        <div class="box"><div class="box-title">Reports.vue</div><div class="box-sub">Quarterly performance, monthly trends, MoM analysis — <span class="tag tag-red">defects</span></div></div>
+        <div class="box"><div class="box-title">Spending.vue</div><div class="box-sub">Revenue vs costs, monthly spend, category breakdown, transactions</div></div>
+        <div class="box"><div class="box-title">Demand.vue</div><div class="box-sub">Demand forecast trends (increasing / stable / decreasing)</div></div>
+        <div class="box" style="border-color:#fca5a5;"><div class="box-title">Backlog.vue <span class="tag tag-amber">no route</span></div><div class="box-sub">Shortage tracking with priority levels. Exists but missing from router.</div></div>
+      </div>
+      <div>
+        <h3>Composables (3 — shared state)</h3>
+        <div class="box">
+          <div class="box-title">useFilters.js</div>
+          <div class="box-sub">Singleton. Refs: selectedPeriod, selectedLocation, selectedCategory, selectedStatus. Methods: resetFilters(), getCurrentFilters(), hasActiveFilters()</div>
+        </div>
+        <div class="box">
+          <div class="box-title">useAuth.js</div>
+          <div class="box-sub">Mock user session. Language-aware computed properties (name, title, tasks in EN/JA). getInitials(), logout()</div>
+        </div>
+        <div class="box">
+          <div class="box-title">useI18n.js</div>
+          <div class="box-sub">Custom i18n (not vue-i18n). setLocale(), t(), translateProductName(), translateWarehouse(). Fallback: ja → en. Currency auto-selects USD/JPY by locale.</div>
+        </div>
+        <h3 style="margin-top:20px;">Key Components</h3>
+        <div class="box"><div class="box-title">FilterBar.vue</div><div class="box-sub">Global filter controls. Writes to useFilters singleton. Present on all views.</div></div>
+        <div class="box"><div class="box-title">LanguageSwitcher.vue</div><div class="box-sub">EN ↔ JA toggle. Calls useI18n.setLocale(). Persists to localStorage.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- API Surface -->
+  <section>
+    <h2>API Surface</h2>
+    <table>
+      <thead>
+        <tr><th>Method</th><th>Endpoint</th><th>Query Parameters</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/inventory</td><td class="params">warehouse, category</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/inventory/{item_id}</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/orders</td><td class="params">warehouse, category, status, month</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/orders/{order_id}</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/demand</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/backlog</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/dashboard/summary</td><td class="params">warehouse, category, status, month</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/spending/summary</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/spending/monthly</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/spending/categories</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/spending/transactions</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/reports/quarterly</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr><td><span class="method">GET</span></td><td class="endpoint">/api/reports/monthly-trends</td><td class="params">—</td><td><span class="status-ok">✓ Implemented</span></td></tr>
+        <tr style="background:#fff5f5;"><td><span class="method" style="background:#fee2e2;color:#dc2626;">GET</span></td><td class="endpoint">/api/tasks</td><td class="params">—</td><td><span class="status-missing">✗ Missing</span></td></tr>
+        <tr style="background:#fff5f5;"><td><span class="method" style="background:#fee2e2;color:#dc2626;">POST</span></td><td class="endpoint">/api/tasks</td><td class="params">—</td><td><span class="status-missing">✗ Missing</span></td></tr>
+        <tr style="background:#fff5f5;"><td><span class="method" style="background:#fee2e2;color:#dc2626;">DELETE</span></td><td class="endpoint">/api/tasks/{taskId}</td><td class="params">—</td><td><span class="status-missing">✗ Missing</span></td></tr>
+        <tr style="background:#fff5f5;"><td><span class="method" style="background:#fee2e2;color:#dc2626;">PATCH</span></td><td class="endpoint">/api/tasks/{taskId}</td><td class="params">—</td><td><span class="status-missing">✗ Missing</span></td></tr>
+        <tr style="background:#fff5f5;"><td><span class="method" style="background:#fee2e2;color:#dc2626;">POST</span></td><td class="endpoint">/api/purchase-orders</td><td class="params">—</td><td><span class="status-missing">✗ Missing</span></td></tr>
+        <tr style="background:#fff5f5;"><td><span class="method" style="background:#fee2e2;color:#dc2626;">GET</span></td><td class="endpoint">/api/purchase-orders/{backlogItemId}</td><td class="params">—</td><td><span class="status-missing">✗ Missing</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:#94a3b8;margin-top:8px;">13 of 19 client-called endpoints are implemented. The 6 missing endpoints (Tasks, Purchase Orders) cause silent failures in the UI — the client calls them but the server returns 404.</p>
+  </section>
+
+  <!-- Data layer -->
+  <section>
+    <h2>Data Layer</h2>
+    <div class="three-col">
+      <div class="box"><div class="box-title">inventory.json</div><div class="box-sub">SKU, name, category, warehouse, quantity, reorder_point, unit_cost</div></div>
+      <div class="box"><div class="box-title">orders.json</div><div class="box-sub">Order number, customer, items[], status, dates, total_value, warehouse</div></div>
+      <div class="box"><div class="box-title">demand_forecasts.json</div><div class="box-sub">Item SKU/name, current_demand, forecasted_demand, trend, period</div></div>
+      <div class="box"><div class="box-title">backlog_items.json</div><div class="box-sub">Order reference, quantities, days_delayed, priority (high/med/low)</div></div>
+      <div class="box"><div class="box-title">spending.json</div><div class="box-sub">spending_summary, monthly_spending, category_spending</div></div>
+      <div class="box"><div class="box-title">transactions.json</div><div class="box-sub">Recent transaction records</div></div>
+      <div class="box" style="border-color:#fca5a5;"><div class="box-title">purchase_orders.json <span class="tag tag-amber">empty</span></div><div class="box-sub">File exists, schema defined, but contains empty array []</div></div>
+    </div>
+    <p style="font-size:12px;color:#94a3b8;margin-top:8px;">All data loaded into Python lists at server startup via <code>mock_data.py</code>. Filtering is performed in-memory. No database layer — appropriate for current scale, will need revisiting as data volume grows.</p>
+  </section>
+
+  <!-- Technical Debt -->
+  <section>
+    <h2>Known Technical Debt</h2>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 20px;">
+      <ul class="debt-list">
+        <li>
+          <div class="debt-icon high">!</div>
+          <div class="debt-body">
+            <div class="debt-title">Reports module defects <span class="tag tag-red">R1 — in scope</span></div>
+            <div class="debt-desc">Multiple filter wiring issues, i18n gaps, and display inconsistencies. Previous vendor acknowledged this was "in progress" at contract end. Full audit underway.</div>
+          </div>
+        </li>
+        <li>
+          <div class="debt-icon high">!</div>
+          <div class="debt-body">
+            <div class="debt-title">6 missing API endpoints <span class="tag tag-amber">silent failures</span></div>
+            <div class="debt-desc">Tasks (4 endpoints) and Purchase Orders (2 endpoints) are called by the frontend but not implemented in FastAPI. Calls return 404 silently — users see no error, features simply don't work.</div>
+          </div>
+        </li>
+        <li>
+          <div class="debt-icon med">~</div>
+          <div class="debt-body">
+            <div class="debt-title">Backlog view not in router</div>
+            <div class="debt-desc">Backlog.vue is fully implemented but its route is missing from the Vue Router config. The view exists but is unreachable via normal navigation.</div>
+          </div>
+        </li>
+        <li>
+          <div class="debt-icon med">~</div>
+          <div class="debt-body">
+            <div class="debt-title">Reports and Backlog views not i18n-integrated <span class="tag tag-purple">D2 — in scope</span></div>
+            <div class="debt-desc">All other views use the i18n system. Reports.vue and Backlog.vue have hardcoded English strings — Tokyo warehouse staff see English on these views regardless of language setting.</div>
+          </div>
+        </li>
+        <li>
+          <div class="debt-icon med">~</div>
+          <div class="debt-body">
+            <div class="debt-title">No automated test coverage <span class="tag tag-red">R3 — in scope</span></div>
+            <div class="debt-desc">No end-to-end or unit tests were delivered by the previous vendor. Meridian IT has blocked all changes as a result. Playwright suite is being established as part of this engagement.</div>
+          </div>
+        </li>
+        <li>
+          <div class="debt-icon med">~</div>
+          <div class="debt-body">
+            <div class="debt-title">CORS wildcard in production-bound code</div>
+            <div class="debt-desc">FastAPI is configured with <code>allow_origins=["*"]</code>. Acceptable for development; should be locked to known origins before any production deployment.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- File tree -->
+  <section>
+    <h2>File Map</h2>
+    <div class="tree">
+<span class="dir">client/src/</span>
+  <span class="dir">views/</span>         <span class="file">Dashboard.vue  Inventory.vue  Orders.vue  Reports.vue  Spending.vue  Demand.vue  Backlog.vue</span>
+  <span class="dir">components/</span>    <span class="file">FilterBar.vue  ProfileMenu.vue  LanguageSwitcher.vue  InventoryDetailModal.vue  ...</span>
+  <span class="dir">composables/</span>   <span class="file">useFilters.js  useAuth.js  useI18n.js</span>
+  <span class="dir">locales/</span>       <span class="file">en.js (317 keys)  ja.js (317 keys)</span>
+  <span class="dir">utils/</span>         <span class="file">currency.js</span>
+  <span class="file">api.js</span>         <span class="comment">18 Axios methods — centralized HTTP client</span>
+  <span class="file">main.js</span>        <span class="comment">Vue app init, router config (6 routes)</span>
+  <span class="file">App.vue</span>        <span class="comment">Root layout, nav, filter bar, task loading</span>
+
+<span class="dir">server/</span>
+  <span class="file">main.py</span>        <span class="comment">13 implemented FastAPI endpoints</span>
+  <span class="file">mock_data.py</span>   <span class="comment">JSON file loader, in-memory data store</span>
+  <span class="dir">data/</span>          <span class="file">inventory.json  orders.json  demand_forecasts.json  backlog_items.json  spending.json  transactions.json  purchase_orders.json</span>
+    </div>
+  </section>
+
+  <div class="footer">
+    <span>Meridian Components — Architecture Overview · RFP #MC-2026-0417</span>
+    <span>Produced April 2026 · Based on codebase at contract start</span>
+  </div>
+
+</div>
+</body>
+</html>

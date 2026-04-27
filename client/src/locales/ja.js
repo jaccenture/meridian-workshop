@@ -6,6 +6,7 @@ export default {
     orders: '注文',
     finance: '財務',
     demandForecast: '需要予測',
+    restocking: '補充推奨',
     companyName: '触媒コンポーネンツ',
     subtitle: '在庫管理システム'
   },
@@ -185,6 +186,66 @@ export default {
       change: '変化',
       trend: 'トレンド',
       period: '期間'
+    }
+  },
+
+  // Reports
+  reports: {
+    title: 'パフォーマンスレポート',
+    description: '四半期業績指標と月次トレンドを表示',
+    quarterly: {
+      title: '四半期業績',
+      quarter: '四半期',
+      totalOrders: '総注文数',
+      totalRevenue: '総収益',
+      avgOrderValue: '平均注文額',
+      fulfillmentRate: '履行率'
+    },
+    monthlyTrend: {
+      title: '月次収益トレンド'
+    },
+    monthOverMonth: {
+      title: '前月比分析',
+      month: '月',
+      orders: '注文数',
+      revenue: '収益',
+      change: '変化',
+      growthRate: '成長率'
+    },
+    summary: {
+      totalRevenue: '総収益（年初来）',
+      avgMonthlyRevenue: '平均月次収益',
+      totalOrders: '総注文数（年初来）',
+      bestQuarter: '最高業績四半期'
+    },
+    loading: 'レポートを読み込み中...',
+    error: 'レポートの読み込みに失敗しました'
+  },
+
+  // Restocking
+  restocking: {
+    title: '補充推奨',
+    description: '在庫レベルと需要予測に基づく発注推奨',
+    budgetCeiling: '予算上限',
+    allCandidates: '補充対象品目',
+    withinBudget: '予算内',
+    totalCost: '推定総コスト',
+    costWithinBudget: '予算内コスト',
+    withinBudgetBadge: '予算内',
+    overBudgetBadge: '予算超過',
+    noCandidates: 'すべての品目は適切に在庫されています',
+    table: {
+      sku: 'SKU',
+      itemName: '品目名',
+      category: 'カテゴリ',
+      warehouse: '倉庫',
+      currentStock: '現在庫数',
+      reorderPoint: '再注文点',
+      forecastedDemand: '予測需要',
+      recommendedQty: '推奨数量',
+      unitCost: '単価',
+      estimatedCost: '推定コスト',
+      status: 'ステータス'
     }
   },
 
